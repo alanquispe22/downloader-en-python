@@ -1,3 +1,4 @@
+import sys
 import os
 import re
 import requests
@@ -6,15 +7,19 @@ from urllib.error import HTTPError
 from urllib.request import urlopen
 from clint.textui import progress
 
-url_prin = "url de la pagina objetivo"
+url_prin = "Poner la URL del sitio web aqui"
 
+# Obtiene las URLs de todos los videos encontrados en la pagina objetivo,
+# Retorna un array con la lista de URLs
 def getLstCursos():
     try:    
         # Obtengo HTML texto plano
         html = urlopen(url_prin)
         #print(html.read())
-    except HTTPError as e:
-        print(e)
+    except:
+        print("Hubo problemas al intentar obtener la página, revise si la URL es valida")
+        sys.exit()
+
 
     # Objeto para extraer contenido de HTML, defaultparser:lxml
     bsObj = BeautifulSoup(html.read(),features="lxml")
@@ -31,6 +36,9 @@ def getLstCursos():
     
     return lstCursos
 
+
+# En el esta caso particular la pagina web objetivo tiene varias urls por cada video, cada url
+# con diferentes resoluciones, lo que hacemos es obtener la URL con la mejor calidad
 def getMajorQuality(string):
     apertura = 0
     es_url = 0
@@ -50,7 +58,7 @@ def getMajorQuality(string):
                 if url != '':
                     if "mp4" in url:                                         
                         list_urls.append(url)
-                        # Obtiene la calidad del Vídeo
+                        # Obtiene la calidad del Video
                         q = string[i+41:i+44]
                         list_urls.append(q)
                 url = ''
@@ -76,7 +84,7 @@ def getMajorQuality(string):
     return url_mayor
 
 
-
+# Descarga el video de la url dada y lo almacena con el parametro dado: name
 def descarga(url,name):
     try:
         r = requests.get(url,stream=True)
@@ -87,9 +95,10 @@ def descarga(url,name):
                     pyVid.write(ch)
                     pyVid.flush()
     except Exception as e:
-        print("Falló la descarga:",str(e))
+        print("Fallo la descarga:",str(e))
         return None
 
+# Funcion principal, punto de entrada del programa, que hace uso de las funciones anteriores
 def main():
     # Obtiene lista de: Urls de cursos
     lstCursos = getLstCursos()
@@ -130,4 +139,9 @@ def main():
                         
             nroVid = nroVid + 1
         count = count +1
+
+    if len(allUrls) == 0:
+      print("No hay videos para descargar")
+
+# llamada a la funcion principal
 main()    
